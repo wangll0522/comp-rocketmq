@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <!-- 基础配置 -->
+    <props>
+        <!-- rocketmq的namesrv地址 -->
+        <namesrv addr="172.16.100.253:9876" />
+        <!-- 每次缓存中取handleSize条数据处理,保存端没有上限 -->
+        <cache handleSize="5000" />
+        <!-- compressOver消息大小超出配置对消息压缩，maxMessageSize最大消息限制 -->
+        <producer compressOver="40000" maxMessageSize="9999999"  />
+        <!-- receiveType接收策略：now不接收历史消息|history接收历史消息|time只接收指定时间内的消息默认半小时 -->
+        <consumer receiveType="now">
+            <!-- 设置处理堆积小于配置值的数据，不出大于这个值的老的数据 -->
+            <handle.offset>2</handle.offset>
+            <!-- 指定接收配置参数内的消息 -->
+            <receive.timeout>30</receive.timeout>
+        </consumer>
+    </props>
+    <!-- 配置消费主题 -->
+    <!-- group：消费者分组， instance：启动应用实例名-->
+    <consumer.topic group="lbs-save-dev" instance="consumer.save.01">
+        <!-- gps动态数据处理类，type:订阅主题，tags:行业类别 -->
+        <bean type="dy_data_gps" tags="*"
+              handle="com.beyond.lbs.save.fetch.consumer.GpsDataHandler"
+              converter="com.wangll.comp.rocketmq.converter.impl.GpsMessageConverter"/>
+        <!--<bean type="st_data_busline" tags="*"-->
+              <!--handle="com.beyond.lbs.save.fetch.consumer.BusLineHandler"-->
+              <!--converter="com.wangll.comp.rocketmq.converter.impl.BusLineMsgConverter"/>-->
+
+        <bean type="dy_vst_obd_event" tags="*"
+              handle="com.beyond.lbs.save.fetch.consumer.OdbEventHandler"
+              converter="com.beyond.lbs.protocol.vst808.converter.OdbEventConverter"/>
+        <bean type="dy_vst_can_static" tags="*"
+              handle="com.beyond.lbs.save.fetch.consumer.CanStaticHandler"
+              converter="com.beyond.lbs.protocol.vst808.converter.CanStaticConverter"/>
+
+    </consumer.topic>
+
+    <!-- 配置生产主题 -->
+    <producer.topic group="lbs-save-02" instance="producer">
+        <!-- gps动态数据处理类 -->
+        <bean type="dy_data_gps"
+              handle="com.wangll.comp.rocketmq.producer.impl.GpsDataProducer"
+              converter="com.wangll.comp.rocketmq.converter.impl.GpsMessageConverter"/>
+    </producer.topic>
+
+</config>
